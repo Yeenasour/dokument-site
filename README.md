@@ -1,54 +1,30 @@
-# Astro Starter Kit: Basics
+# Dokument Site
 
-```
-npm create astro@latest -- --template basics
-```
+This is the source code for the [Dokument](https://github.com/cthit/dokument) site. The currently deployed instance can be found at [docs.chalmers.it](https://docs.chalmers.it).
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+It is written in Astro for its simplicity and speed, as well as the fact that it makes it easy to write components for the site.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Development
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+### Prerequisites
 
-## 🚀 Project Structure
+To run the site locally, you need to have [Node.js](https://nodejs.org/en/) installed. You should also use [pnpm](https://pnpm.io/) as your package manager, as it is faster and more secure than npm. You can install it using the following command (assuming you have Node.js installed):
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```
-/
-├── public/
-│   └── favicon.svg
-├── src/
-│   ├── components/
-│   │   └── Card.astro
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+npm install -g pnpm
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+### Running the site
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Run the following commands:
 
-Any static assets, like images, can be placed in the `public/` directory.
+```bash
+pnpm install
+pnpm run dev
+```
 
-## 🧞 Commands
+This will start a development server on port 3000. You can then access the site at [localhost:3000](http://localhost:3000).
 
-All commands are run from the root of the project, from a terminal:
+## Deployment
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+The site is deployed automatically using GitHub Actions on the `main` branch. However, it is deployed using the [dokument](https://github.com/cthit/dokument) repository, as the site should automatically update when the docs are updated. To deploy the site immediately, you can go to that repository and run the `deploy` workflow manually (assuming you have the correct permissions).
