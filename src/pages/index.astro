@@ -8,9 +8,16 @@ type PDF = {
 	url: string
 }
 const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
+	// This is a hack to get the name of the pdf from the path,
+	// because Astro doesn't expose the correct name of the file.
+	// They are also in different locations in dev and prod.
+	const pdfName = pdfRecord.default.includes('/public')
+		? pdfRecord.default.replace('/public/', '').split('.')[0]
+		: pdfRecord.default.replace('/_astro/', '').split('.')[0]
+
 	let pdf: PDF = {
-		name: pdfRecord.default.replace('/public/', '').replace('.pdf', ''),
-		url: pdfRecord.default.replace('/public', '')
+		name: pdfName.replace('_', ' '),
+		url: pdfName + '.pdf'
 	}
 
 	pdf.name = Strings.capitalize(pdf.name)
@@ -60,6 +67,7 @@ const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
 		flex-wrap: wrap;
 		flex-direction: column;
 		gap: 1rem;
+		padding-bottom: 1rem;
 	}
 
 	input {
