@@ -1,0 +1,94 @@
+---
+import Document from '@/components/Document.astro'
+import Layout from '@/layouts/Layout.astro'
+import Strings from '@/utils/Strings'
+
+type PDF = {
+	name: string
+	url: string
+}
+const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
+	let pdf: PDF = {
+		name: pdfRecord.default.replace('/public/', '').replace('.pdf', ''),
+		url: pdfRecord.default.replace('/public', '')
+	}
+
+	pdf.name = Strings.capitalize(pdf.name)
+
+	return pdf
+})
+---
+
+<Layout title='IT-Division Documents'>
+	<input type='search' placeholder='Search' />
+	<ul>
+		{pdfs.map((pdf) => <Document {...pdf} />)}
+	</ul>
+</Layout>
+
+<script>
+	const search = document.querySelector(
+		'input[type=search]'
+	) as HTMLInputElement
+
+	let anchors = document.querySelectorAll('li > a')
+	const documents = Array.from(anchors).map((anchor) => anchor.parentElement)
+
+	if (!search || !documents) throw new Error('Search or documents not found')
+
+	search.addEventListener('input', () => {
+		const query = search.value.toLowerCase()
+
+		documents.forEach((document) => {
+			if (!document) return
+
+			if (document.textContent?.toLowerCase().includes(query)) {
+				document.style.display = 'block'
+			} else {
+				document.style.display = 'none'
+			}
+		})
+	})
+</script>
+
+<style>
+	ul {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	input {
+		width: 20rem;
+		max-width: 20rem;
+		font-size: 1rem;
+		font-family: 'Oxygen', sans-serif;
+		transition: background-color 0.12s ease-out;
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		border: none;
+		margin-bottom: 1.5rem;
+		background-color: var(--color-tertiary);
+		color: var(--color-text);
+	}
+
+	input:hover {
+		background-color: var(--color-tertiary-hover);
+	}
+
+	input:focus {
+		background-color: var(--color-tertiary-focus);
+		outline: none;
+	}
+
+	/* Mobile */
+	@media (max-width: 600px) {
+		input {
+			width: calc(100vw - 1rem);
+		}
+	}
+</style>
