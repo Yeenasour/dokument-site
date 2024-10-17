@@ -1,61 +1,188 @@
 ---
-import Document from '@/components/Document.astro'
-import Layout from '@/layouts/Layout.astro'
-import Strings from '@/utils/Strings'
+import Document from "@/components/Document.astro";
+import Layout from "@/layouts/Layout.astro";
+import Strings from "@/utils/Strings";
 
 type PDF = {
-	name: string
-	url: string
-}
-const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
+	name: string;
+	url: string;
+};
+const pdfs = (await Astro.glob("/public/*.pdf")).map((pdfRecord) => {
 	// This is a hack to get the name of the pdf from the path,
 	// because Astro doesn't expose the correct name of the file.
 	// They are also in different locations in dev and prod.
-	const pdfName = pdfRecord.default.includes('/public')
-		? pdfRecord.default.replace('/public/', '').split('.')[0]
-		: pdfRecord.default.replace('/_astro/', '').split('.')[0]
+	const pdfName = pdfRecord.default.includes("/public")
+		? pdfRecord.default.replace("/public/", "").split(".")[0]
+		: pdfRecord.default.replace("/_astro/", "").split(".")[0];
 
 	let pdf: PDF = {
-		name: pdfName.replace('_', ' '),
-		url: pdfName + '.pdf'
-	}
+		name: pdfName.replace("_", " "),
+		url: pdfName + ".pdf",
+	};
 
-	pdf.name = Strings.capitalize(pdf.name)
+	pdf.name = Strings.capitalize(pdf.name);
 
-	return pdf
-})
+	return pdf;
+});
+
+// The code right below is ugly AF
+// TODO create a .json file to categorize
+/*
+const policies = pdfs.filter((pdf) => {
+	return pdf.name.toLowerCase().includes("policy");
+});
+
+const regulations = pdfs.filter((pdf) => {
+	return (
+		pdf.name.toLowerCase().includes("stadga") ||
+		pdf.name.toLowerCase().includes("reglemente") ||
+		pdf.name.toLowerCase().includes("villkor")
+	);
+});
+
+const templates = pdfs.filter((pdf) => {
+	return (
+		pdf.name.toLowerCase().includes("mall") ||
+		pdf.name.toLowerCase().includes("kontrakt")
+	);
+});
+
+const other = pdfs.filter((pdf) => {
+	return (
+		!policies.includes(pdf) &&
+		!regulations.includes(pdf) &&
+		!templates.includes(pdf)
+	);
+});*/
+
+const categories = {
+    "policies": [
+        "kommunikationspolicy.pdf",
+        "ekonomisk_policy.pdf",
+        "uppforandepolicy.pdf",
+        "lokalpolicy.pdf",
+        "asppolicy.pdf",
+        "miljopolicy.pdf",
+        "mjukvarupolicy.pdf"
+    ],
+    "templates": [
+		"askningsmall.pdf",
+        "hedersmedlemsmall.pdf",
+        "intervjuutskicksmall.pdf",
+        "intygsmall.pdf",
+        "milersattningssmall.pdf",
+        "motionsmall.pdf",
+        "nomineringsmall.pdf",
+		"beslutsmall.pdf",
+		"nyckelkontrakt.pdf",
+		"namnlista.pdf"
+    ],
+    "regulations": [
+		"stadga.pdf",
+		"reglemente.pdf",
+		"8-bit_stadga.pdf",
+		"FikIT_stadga.pdf"
+    ]
+}
+
+console.log(pdfs)
+console.log(categories.policies)
+
 ---
 
-<Layout title='IT-Division Documents'>
-	<input type='search' placeholder='Search' />
-	<ul>
-		{pdfs.map((pdf) => <Document {...pdf} />)}
-	</ul>
+<Layout title="IT-Division Documents">
+	<input type="search" placeholder="Search" />
+
+	<div class="content_div">
+		<div class="document_container">
+			<h2>Policys</h2>
+			<ul>
+				{pdfs.filter(value => categories.policies.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container">
+			<h2>Stadgar & Regler</h2>
+			<ul>
+				{pdfs.filter(value => categories.regulations.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container">
+			<h2>Mallar</h2>
+			<ul>
+				{pdfs.filter(value => categories.templates.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container">
+			<h2>Other</h2>
+			<ul>
+				{pdfs.filter(value => 
+				!categories.policies.includes(value.url) && !categories.regulations.includes(value.url) && !categories.templates.includes(value.url)
+				).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+	</div>
 </Layout>
 
 <script>
 	const search = document.querySelector(
-		'input[type=search]'
-	) as HTMLInputElement
+		"input[type=search]",
+	) as HTMLInputElement;
 
-	let anchors = document.querySelectorAll('li > a')
-	const documents = Array.from(anchors).map((anchor) => anchor.parentElement)
+	//let anchors = document.querySelectorAll("li > a");
+	//const documents = Array.from(anchors).map((anchor) => anchor.parentElement);
 
-	if (!search || !documents) throw new Error('Search or documents not found')
+	let anchors = document.querySelectorAll("ul");
 
-	search.addEventListener('input', () => {
-		const query = search.value.toLowerCase()
+	const documents = Array.from(anchors).map((anchor) => anchor);
 
-		documents.forEach((document) => {
-			if (!document) return
+	if (!search || !documents) throw new Error("Search or documents not found");
 
-			if (document.textContent?.toLowerCase().includes(query)) {
-				document.style.display = 'block'
+	const anchorMap = new Map<HTMLElement,Array<HTMLUListElement>>();
+
+	anchors.forEach((anchor) => {
+		const parent = anchor.parentElement;
+		if (!parent) return;
+		anchorMap.set(
+			parent, 
+			Array.from(anchor.children) as HTMLUListElement[]);
+	});
+
+	search.addEventListener("input", () => {
+		const query = search.value.toLowerCase();
+	
+		anchorMap.forEach(function(children, anchor) {
+			let showAnchor = false;
+
+			children.forEach(child => {
+				if (!child) return;
+				
+				if (child.textContent?.toLowerCase().includes(query)) {
+					child.style.display = "block";
+					showAnchor = true;
+				} else {
+					child.style.display = "none";
+				}
+			});
+			
+			if (!showAnchor) {
+				anchor.style.display = "none";
 			} else {
-				document.style.display = 'none'
+				anchor.style.display = "flex";
 			}
-		})
-	})
+		});
+	});
+
+	window.addEventListener("resize", () => {
+		const targetWidth = 440;
+
+		const windowWidth = window.innerWidth;
+
+		const numOfLists = Math.floor(windowWidth / targetWidth);
+
+		console.log(numOfLists);
+
+		
+	});
 </script>
 
 <style>
@@ -70,11 +197,23 @@ const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
 		padding-bottom: 1rem;
 	}
 
+	div.content_div {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		height: auto;
+		/*display: grid;
+		grid-auto-flow: column;
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: auto;*/
+	}
+
 	input {
 		width: 20rem;
 		max-width: 20rem;
 		font-size: 1rem;
-		font-family: 'Oxygen', sans-serif;
+		font-family: "Oxygen", sans-serif;
 		transition: background-color 0.12s ease-out;
 		padding: 0.5rem;
 		border-radius: 0.5rem;
@@ -98,5 +237,18 @@ const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
 		input {
 			width: calc(100vw - 1rem);
 		}
+	}
+
+	.document_container {
+		padding: 50px 10px 0 10px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		align-self: flex-start;
+	}
+
+	.document_container > h2 {
+		margin-bottom: 20px;
+		font-size: xx-large;
 	}
 </style>
