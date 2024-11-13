@@ -1,0 +1,29 @@
+{
+  "policies": [
+    "kommunikationspolicy.pdf",
+    "ekonomisk_policy.pdf",
+    "uppforandepolicy.pdf",
+    "lokalpolicy.pdf",
+    "asppolicy.pdf",
+    "miljopolicy.pdf",
+    "mjukvarupolicy.pdf"
+  ],
+  "templates": [
+    "askningsmall.pdf",
+    "hedersmedlemsmall.pdf",
+    "intervjuutskicksmall.pdf",
+    "intygsmall.pdf",
+    "milersattningssmall.pdf",
+    "motionsmall.pdf",
+    "nomineringsmall.pdf",
+    "beslutsmall.pdf",
+    "nyckelkontrakt.pdf",
+    "namnlista.pdf"
+  ],
+  "regulations": [
+    "stadga.pdf",
+    "reglemente.pdf",
+    "8-bit_stadga.pdf",
+    "FikIT_stadga.pdf"
+  ]
+}

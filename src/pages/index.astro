@@ -2,11 +2,13 @@
 import Document from "@/components/Document.astro";
 import Layout from "@/layouts/Layout.astro";
 import Strings from "@/utils/Strings";
+import categories from "../data/categories.json";
 
 type PDF = {
 	name: string;
 	url: string;
 };
+
 const pdfs = (await Astro.glob("/public/*.pdf")).map((pdfRecord) => {
 	// This is a hack to get the name of the pdf from the path,
 	// because Astro doesn't expose the correct name of the file.
@@ -24,36 +26,6 @@ const pdfs = (await Astro.glob("/public/*.pdf")).map((pdfRecord) => {
 
 	return pdf;
 });
-
-const categories = {
-    "policies": [
-        "kommunikationspolicy.pdf",
-        "ekonomisk_policy.pdf",
-        "uppforandepolicy.pdf",
-        "lokalpolicy.pdf",
-        "asppolicy.pdf",
-        "miljopolicy.pdf",
-        "mjukvarupolicy.pdf"
-    ],
-    "templates": [
-		"askningsmall.pdf",
-        "hedersmedlemsmall.pdf",
-        "intervjuutskicksmall.pdf",
-        "intygsmall.pdf",
-        "milersattningssmall.pdf",
-        "motionsmall.pdf",
-        "nomineringsmall.pdf",
-		"beslutsmall.pdf",
-		"nyckelkontrakt.pdf",
-		"namnlista.pdf"
-    ],
-    "regulations": [
-		"stadga.pdf",
-		"reglemente.pdf",
-		"8-bit_stadga.pdf",
-		"FikIT_stadga.pdf"
-    ]
-}
 
 ---
 
@@ -91,7 +63,9 @@ const categories = {
 			<h2>Other</h2>
 			<ul>
 				{pdfs.filter(value => 
-					!categories.policies.includes(value.url) && !categories.regulations.includes(value.url) && !categories.templates.includes(value.url)
+					!categories.policies.includes(value.url) &&
+					!categories.regulations.includes(value.url) &&
+					!categories.templates.includes(value.url)
 				).map((pdf) => <Document {...pdf}/>)}
 			</ul>
 		</div>
@@ -109,7 +83,6 @@ const categories = {
 	) as HTMLInputElement;
 
 	const buttons = document.querySelectorAll(".tab_button");
-
 	const containers = document.querySelectorAll(".document_container");
 
 	buttons.forEach(button => {
@@ -131,7 +104,7 @@ const categories = {
 	});
 
 	let anchors = document.querySelectorAll("ul");
-
+	
 	const documents = Array.from(anchors).map((anchor) => anchor);
 
 	if (!search || !documents) throw new Error("Search or documents not found");
@@ -163,8 +136,6 @@ const categories = {
 
 		anchorMap.forEach(function(children) {
 			children.forEach(child => {
-				if (!child) return;
-				
 				if (child.textContent?.toLowerCase().includes(query)) {
 					child.style.display = "block";
 				} else {
@@ -172,18 +143,6 @@ const categories = {
 				}
 			});
 		});
-	});
-
-	window.addEventListener("resize", () => {
-		const targetWidth = 440;
-
-		const windowWidth = window.innerWidth;
-
-		const numOfLists = Math.floor(windowWidth / targetWidth);
-
-		console.log(numOfLists);
-
-		
 	});
 </script>
 
