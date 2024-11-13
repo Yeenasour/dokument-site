@@ -25,36 +25,6 @@ const pdfs = (await Astro.glob("/public/*.pdf")).map((pdfRecord) => {
 	return pdf;
 });
 
-// The code right below is ugly AF
-// TODO create a .json file to categorize
-/*
-const policies = pdfs.filter((pdf) => {
-	return pdf.name.toLowerCase().includes("policy");
-});
-
-const regulations = pdfs.filter((pdf) => {
-	return (
-		pdf.name.toLowerCase().includes("stadga") ||
-		pdf.name.toLowerCase().includes("reglemente") ||
-		pdf.name.toLowerCase().includes("villkor")
-	);
-});
-
-const templates = pdfs.filter((pdf) => {
-	return (
-		pdf.name.toLowerCase().includes("mall") ||
-		pdf.name.toLowerCase().includes("kontrakt")
-	);
-});
-
-const other = pdfs.filter((pdf) => {
-	return (
-		!policies.includes(pdf) &&
-		!regulations.includes(pdf) &&
-		!templates.includes(pdf)
-	);
-});*/
-
 const categories = {
     "policies": [
         "kommunikationspolicy.pdf",
@@ -85,39 +55,49 @@ const categories = {
     ]
 }
 
-console.log(pdfs)
-console.log(categories.policies)
-
 ---
 
 <Layout title="IT-Division Documents">
+
+	<div id="navbar">
+		<button class="tab_button" data-category="regulations">Stadgar & Reglemente</button>
+		<button class="tab_button" data-category="policies">Policys</button>
+		<button class="tab_button" data-category="templates">Mallar</button>
+		<button class="tab_button" data-category="other">Övrigt</button>
+	</div>
+
 	<input type="search" placeholder="Search" />
 
 	<div class="content_div">
-		<div class="document_container">
+		<div class="document_container" style="display: none;" data-category="regulations">
+			<h2>Stadgar & Reglemente</h2>
+			<ul>
+				{pdfs.filter(value => categories.regulations.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container" style="display: none;" data-category="policies">
 			<h2>Policys</h2>
 			<ul>
 				{pdfs.filter(value => categories.policies.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
 			</ul>
 		</div>
-		<div class="document_container">
-			<h2>Stadgar & Regler</h2>
-			<ul>
-				{pdfs.filter(value => categories.regulations.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
-			</ul>
-		</div>
-		<div class="document_container">
+		<div class="document_container" style="display: none;" data-category="templates">
 			<h2>Mallar</h2>
 			<ul>
 				{pdfs.filter(value => categories.templates.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
 			</ul>
 		</div>
-		<div class="document_container">
+		<div class="document_container" style="display: none;" data-category="other">
 			<h2>Other</h2>
 			<ul>
 				{pdfs.filter(value => 
-				!categories.policies.includes(value.url) && !categories.regulations.includes(value.url) && !categories.templates.includes(value.url)
+					!categories.policies.includes(value.url) && !categories.regulations.includes(value.url) && !categories.templates.includes(value.url)
 				).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container" style="display: flex;" data-category="all">
+			<ul>
+				{pdfs.map((pdf) => <Document {...pdf}/>)}
 			</ul>
 		</div>
 	</div>
@@ -128,8 +108,27 @@ console.log(categories.policies)
 		"input[type=search]",
 	) as HTMLInputElement;
 
-	//let anchors = document.querySelectorAll("li > a");
-	//const documents = Array.from(anchors).map((anchor) => anchor.parentElement);
+	const buttons = document.querySelectorAll(".tab_button");
+
+	const containers = document.querySelectorAll(".document_container");
+
+	buttons.forEach(button => {
+		button.addEventListener("click", () => {
+			buttons.forEach(btn => btn.classList.remove("selected"));
+			button.classList.add("selected");
+
+			const category = button.getAttribute('data-category');
+
+			containers.forEach(container => {
+				const containerCategory = container.getAttribute('data-category');
+				if (category == containerCategory) {
+					(container as HTMLElement).style.display = "flex";
+				} else {
+					(container as HTMLElement).style.display = "none";
+				}
+			});
+		});
+	});
 
 	let anchors = document.querySelectorAll("ul");
 
@@ -149,26 +148,29 @@ console.log(categories.policies)
 
 	search.addEventListener("input", () => {
 		const query = search.value.toLowerCase();
-	
-		anchorMap.forEach(function(children, anchor) {
-			let showAnchor = false;
 
+		document.querySelectorAll(".tab_button").forEach(button => {
+			button.classList.remove("selected");
+		});
+		
+		containers.forEach(container => {
+			if (container.getAttribute('data-category') == "all") {
+				(container as HTMLElement).style.display = "flex";
+			} else {
+				(container as HTMLElement).style.display = "none";
+			}
+		});
+
+		anchorMap.forEach(function(children) {
 			children.forEach(child => {
 				if (!child) return;
 				
 				if (child.textContent?.toLowerCase().includes(query)) {
 					child.style.display = "block";
-					showAnchor = true;
 				} else {
 					child.style.display = "none";
 				}
 			});
-			
-			if (!showAnchor) {
-				anchor.style.display = "none";
-			} else {
-				anchor.style.display = "flex";
-			}
 		});
 	});
 
@@ -197,28 +199,67 @@ console.log(categories.policies)
 		padding-bottom: 1rem;
 	}
 
+	.selected {
+		background-color: var(--color-secondary-hover);
+	}
+
+	div#navbar {
+		display: flex;
+		justify-content: space-around;
+		flex-wrap: wrap;
+		margin-top: 2rem;
+		row-gap: 1rem;
+		column-gap: 1.5rem;
+		min-width: 600px;
+		height: fit-content;
+		text-overflow: initial;
+	}
+
+	div#navbar > button {
+		position: relative;
+		top: 0;
+		width: 10rem;
+		min-width: 8rem;
+		height: 6rem;
+		background-color: var(--color-secondary);
+		font-family: 'Noto Sans Meroitic';
+		font-size: 1.5rem;
+		transition:
+			background-color 0.3s ease,
+			box-shadow 0.3s ease;
+		border: none;
+		border-radius: 0.75rem;
+		box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+	}
+
+	div#navbar > button:hover {
+		background-color: var(--color-secondary-hover);
+		box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.32);
+		cursor: pointer;
+	}
+
+	div#navbar > button.selected {
+		background-color: var(--color-secondary-hover);
+	}
+
 	div.content_div {
 		display: flex;
 		justify-content: center;
 		align-items: flex-start;
 		flex-wrap: wrap;
 		height: auto;
-		/*display: grid;
-		grid-auto-flow: column;
-		grid-template-columns: repeat(3, 1fr);
-		grid-template-rows: auto;*/
 	}
 
 	input {
-		width: 20rem;
-		max-width: 20rem;
-		font-size: 1rem;
+		width: 25rem;
+		max-width: 25rem;
+		font-size: 1.5rem;
 		font-family: "Oxygen", sans-serif;
 		transition: background-color 0.12s ease-out;
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		border: none;
-		margin-bottom: 1.5rem;
+		margin: 3rem 0 1.5rem 0;
 		background-color: var(--color-tertiary);
 		color: var(--color-text);
 	}
@@ -236,6 +277,15 @@ console.log(categories.policies)
 	@media (max-width: 600px) {
 		input {
 			width: calc(100vw - 1rem);
+		}
+
+		div#navbar {
+			width: 100vw;
+			min-width: 0;
+			display: flex;
+			justify-content: space-around;
+			column-gap: 0;
+			flex-wrap: wrap;
 		}
 	}
 
