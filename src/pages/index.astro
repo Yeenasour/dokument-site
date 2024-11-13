@@ -1,61 +1,190 @@
 ---
-import Document from '@/components/Document.astro'
-import Layout from '@/layouts/Layout.astro'
-import Strings from '@/utils/Strings'
+import Document from "@/components/Document.astro";
+import Layout from "@/layouts/Layout.astro";
+import Strings from "@/utils/Strings";
 
 type PDF = {
-	name: string
-	url: string
-}
-const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
+	name: string;
+	url: string;
+};
+const pdfs = (await Astro.glob("/public/*.pdf")).map((pdfRecord) => {
 	// This is a hack to get the name of the pdf from the path,
 	// because Astro doesn't expose the correct name of the file.
 	// They are also in different locations in dev and prod.
-	const pdfName = pdfRecord.default.includes('/public')
-		? pdfRecord.default.replace('/public/', '').split('.')[0]
-		: pdfRecord.default.replace('/_astro/', '').split('.')[0]
+	const pdfName = pdfRecord.default.includes("/public")
+		? pdfRecord.default.replace("/public/", "").split(".")[0]
+		: pdfRecord.default.replace("/_astro/", "").split(".")[0];
 
 	let pdf: PDF = {
-		name: pdfName.replace('_', ' '),
-		url: pdfName + '.pdf'
-	}
+		name: pdfName.replace("_", " "),
+		url: pdfName + ".pdf",
+	};
 
-	pdf.name = Strings.capitalize(pdf.name)
+	pdf.name = Strings.capitalize(pdf.name);
 
-	return pdf
-})
+	return pdf;
+});
+
+const categories = {
+    "policies": [
+        "kommunikationspolicy.pdf",
+        "ekonomisk_policy.pdf",
+        "uppforandepolicy.pdf",
+        "lokalpolicy.pdf",
+        "asppolicy.pdf",
+        "miljopolicy.pdf",
+        "mjukvarupolicy.pdf"
+    ],
+    "templates": [
+		"askningsmall.pdf",
+        "hedersmedlemsmall.pdf",
+        "intervjuutskicksmall.pdf",
+        "intygsmall.pdf",
+        "milersattningssmall.pdf",
+        "motionsmall.pdf",
+        "nomineringsmall.pdf",
+		"beslutsmall.pdf",
+		"nyckelkontrakt.pdf",
+		"namnlista.pdf"
+    ],
+    "regulations": [
+		"stadga.pdf",
+		"reglemente.pdf",
+		"8-bit_stadga.pdf",
+		"FikIT_stadga.pdf"
+    ]
+}
+
 ---
 
-<Layout title='IT-Division Documents'>
-	<input type='search' placeholder='Search' />
-	<ul>
-		{pdfs.map((pdf) => <Document {...pdf} />)}
-	</ul>
+<Layout title="IT-Division Documents">
+
+	<div id="navbar">
+		<button class="tab_button" data-category="regulations">Stadgar & Reglemente</button>
+		<button class="tab_button" data-category="policies">Policys</button>
+		<button class="tab_button" data-category="templates">Mallar</button>
+		<button class="tab_button" data-category="other">Övrigt</button>
+	</div>
+
+	<input type="search" placeholder="Search" />
+
+	<div class="content_div">
+		<div class="document_container" style="display: none;" data-category="regulations">
+			<h2>Stadgar & Reglemente</h2>
+			<ul>
+				{pdfs.filter(value => categories.regulations.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container" style="display: none;" data-category="policies">
+			<h2>Policys</h2>
+			<ul>
+				{pdfs.filter(value => categories.policies.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container" style="display: none;" data-category="templates">
+			<h2>Mallar</h2>
+			<ul>
+				{pdfs.filter(value => categories.templates.includes(value.url)).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container" style="display: none;" data-category="other">
+			<h2>Other</h2>
+			<ul>
+				{pdfs.filter(value => 
+					!categories.policies.includes(value.url) && !categories.regulations.includes(value.url) && !categories.templates.includes(value.url)
+				).map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+		<div class="document_container" style="display: flex;" data-category="all">
+			<ul>
+				{pdfs.map((pdf) => <Document {...pdf}/>)}
+			</ul>
+		</div>
+	</div>
 </Layout>
 
 <script>
 	const search = document.querySelector(
-		'input[type=search]'
-	) as HTMLInputElement
+		"input[type=search]",
+	) as HTMLInputElement;
 
-	let anchors = document.querySelectorAll('li > a')
-	const documents = Array.from(anchors).map((anchor) => anchor.parentElement)
+	const buttons = document.querySelectorAll(".tab_button");
 
-	if (!search || !documents) throw new Error('Search or documents not found')
+	const containers = document.querySelectorAll(".document_container");
 
-	search.addEventListener('input', () => {
-		const query = search.value.toLowerCase()
+	buttons.forEach(button => {
+		button.addEventListener("click", () => {
+			buttons.forEach(btn => btn.classList.remove("selected"));
+			button.classList.add("selected");
 
-		documents.forEach((document) => {
-			if (!document) return
+			const category = button.getAttribute('data-category');
 
-			if (document.textContent?.toLowerCase().includes(query)) {
-				document.style.display = 'block'
+			containers.forEach(container => {
+				const containerCategory = container.getAttribute('data-category');
+				if (category == containerCategory) {
+					(container as HTMLElement).style.display = "flex";
+				} else {
+					(container as HTMLElement).style.display = "none";
+				}
+			});
+		});
+	});
+
+	let anchors = document.querySelectorAll("ul");
+
+	const documents = Array.from(anchors).map((anchor) => anchor);
+
+	if (!search || !documents) throw new Error("Search or documents not found");
+
+	const anchorMap = new Map<HTMLElement,Array<HTMLUListElement>>();
+
+	anchors.forEach((anchor) => {
+		const parent = anchor.parentElement;
+		if (!parent) return;
+		anchorMap.set(
+			parent, 
+			Array.from(anchor.children) as HTMLUListElement[]);
+	});
+
+	search.addEventListener("input", () => {
+		const query = search.value.toLowerCase();
+
+		document.querySelectorAll(".tab_button").forEach(button => {
+			button.classList.remove("selected");
+		});
+		
+		containers.forEach(container => {
+			if (container.getAttribute('data-category') == "all") {
+				(container as HTMLElement).style.display = "flex";
 			} else {
-				document.style.display = 'none'
+				(container as HTMLElement).style.display = "none";
 			}
-		})
-	})
+		});
+
+		anchorMap.forEach(function(children) {
+			children.forEach(child => {
+				if (!child) return;
+				
+				if (child.textContent?.toLowerCase().includes(query)) {
+					child.style.display = "block";
+				} else {
+					child.style.display = "none";
+				}
+			});
+		});
+	});
+
+	window.addEventListener("resize", () => {
+		const targetWidth = 440;
+
+		const windowWidth = window.innerWidth;
+
+		const numOfLists = Math.floor(windowWidth / targetWidth);
+
+		console.log(numOfLists);
+
+		
+	});
 </script>
 
 <style>
@@ -70,16 +199,67 @@ const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
 		padding-bottom: 1rem;
 	}
 
+	.selected {
+		background-color: var(--color-secondary-hover);
+	}
+
+	div#navbar {
+		display: flex;
+		justify-content: space-around;
+		flex-wrap: wrap;
+		margin-top: 2rem;
+		row-gap: 1rem;
+		column-gap: 1.5rem;
+		min-width: 600px;
+		height: fit-content;
+		text-overflow: initial;
+	}
+
+	div#navbar > button {
+		position: relative;
+		top: 0;
+		width: 10rem;
+		min-width: 8rem;
+		height: 6rem;
+		background-color: var(--color-secondary);
+		font-family: 'Noto Sans Meroitic';
+		font-size: 1.5rem;
+		transition:
+			background-color 0.3s ease,
+			box-shadow 0.3s ease;
+		border: none;
+		border-radius: 0.75rem;
+		box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+	}
+
+	div#navbar > button:hover {
+		background-color: var(--color-secondary-hover);
+		box-shadow: 0 0.25rem 1.25rem rgba(0, 0, 0, 0.32);
+		cursor: pointer;
+	}
+
+	div#navbar > button.selected {
+		background-color: var(--color-secondary-hover);
+	}
+
+	div.content_div {
+		display: flex;
+		justify-content: center;
+		align-items: flex-start;
+		flex-wrap: wrap;
+		height: auto;
+	}
+
 	input {
-		width: 20rem;
-		max-width: 20rem;
-		font-size: 1rem;
-		font-family: 'Oxygen', sans-serif;
+		width: 25rem;
+		max-width: 25rem;
+		font-size: 1.5rem;
+		font-family: "Oxygen", sans-serif;
 		transition: background-color 0.12s ease-out;
 		padding: 0.5rem;
 		border-radius: 0.5rem;
 		border: none;
-		margin-bottom: 1.5rem;
+		margin: 3rem 0 1.5rem 0;
 		background-color: var(--color-tertiary);
 		color: var(--color-text);
 	}
@@ -98,5 +278,27 @@ const pdfs = (await Astro.glob('/public/*.pdf')).map((pdfRecord) => {
 		input {
 			width: calc(100vw - 1rem);
 		}
+
+		div#navbar {
+			width: 100vw;
+			min-width: 0;
+			display: flex;
+			justify-content: space-around;
+			column-gap: 0;
+			flex-wrap: wrap;
+		}
+	}
+
+	.document_container {
+		padding: 50px 10px 0 10px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		align-self: flex-start;
+	}
+
+	.document_container > h2 {
+		margin-bottom: 20px;
+		font-size: xx-large;
 	}
 </style>
